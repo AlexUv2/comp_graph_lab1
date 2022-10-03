@@ -32,6 +32,7 @@ class Ui_MainWindow(object):
         self.horizontalLayout_11.addWidget(self.label_size)
         self.spinBox_size = QtWidgets.QSpinBox(self.groupBox)
         self.spinBox_size.setObjectName("spinBox_size")
+        self.spinBox_size.setValue(20)
         self.horizontalLayout_11.addWidget(self.spinBox_size)
         self.verticalLayout.addLayout(self.horizontalLayout_11)
         self.pushButton_set_default = QtWidgets.QPushButton(self.groupBox)
@@ -118,6 +119,7 @@ class Ui_MainWindow(object):
         self.spinBox_affine_xx.setSuffix("")
         self.spinBox_affine_xx.setPrefix("")
         self.spinBox_affine_xx.setObjectName("spinBox_affine_xx")
+        # self.spinBox_affine_xx.setMaximum(1000)  ####### !!!!!!!!!!!!
         self.horizontalLayout_44.addWidget(self.spinBox_affine_xx)
         self.gridLayout_7.addLayout(self.horizontalLayout_44, 0, 0, 1, 1)
         self.horizontalLayout_46 = QtWidgets.QHBoxLayout()
@@ -295,14 +297,11 @@ class Ui_MainWindow(object):
         self.gridLayout.setObjectName("gridLayout")
         self.horizontalLayout_9 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_9.setObjectName("horizontalLayout_9")
-        self.label_length_jk = QtWidgets.QLabel(self.groupBox_2)
-        self.label_length_jk.setObjectName("label_length_jk")
-        self.horizontalLayout_9.addWidget(self.label_length_jk)
-        self.spinBox_length_jk = QtWidgets.QSpinBox(self.groupBox_2)
-        self.spinBox_length_jk.setSuffix("")
-        self.spinBox_length_jk.setPrefix("")
-        self.spinBox_length_jk.setObjectName("spinBox_length_jk")
-        self.horizontalLayout_9.addWidget(self.spinBox_length_jk)
+
+        self.pushButton_length_apply = QtWidgets.QPushButton(self.groupBox_2)
+        self.pushButton_length_apply.setObjectName("Apply")
+        self.pushButton_length_apply.setText("Apply")
+        self.horizontalLayout_9.addWidget(self.pushButton_length_apply)
         self.gridLayout.addLayout(self.horizontalLayout_9, 4, 1, 1, 1)
 
         self.horizontalLayout_6 = QtWidgets.QHBoxLayout()
@@ -395,14 +394,14 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout_8 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_8.setObjectName("horizontalLayout_8")
-        self.label_length_ij = QtWidgets.QLabel(self.groupBox_2)
-        self.label_length_ij.setObjectName("label_length_ij")
-        self.horizontalLayout_8.addWidget(self.label_length_ij)
-        self.spinBox_length_ij = QtWidgets.QSpinBox(self.groupBox_2)
-        self.spinBox_length_ij.setSuffix("")
-        self.spinBox_length_ij.setPrefix("")
-        self.spinBox_length_ij.setObjectName("spinBox_length_ij")
-        self.horizontalLayout_8.addWidget(self.spinBox_length_ij)
+        self.label_length_ia = QtWidgets.QLabel(self.groupBox_2)
+        self.label_length_ia.setObjectName("label_length_ia")
+        self.horizontalLayout_8.addWidget(self.label_length_ia)
+        self.spinBox_length_ia = QtWidgets.QSpinBox(self.groupBox_2)
+        self.spinBox_length_ia.setSuffix("")
+        self.spinBox_length_ia.setPrefix("")
+        self.spinBox_length_ia.setObjectName("spinBox_length_ia")
+        self.horizontalLayout_8.addWidget(self.spinBox_length_ia)
         self.gridLayout.addLayout(self.horizontalLayout_8, 4, 0, 1, 1)
 
         self.horizontalLayout = QtWidgets.QHBoxLayout()
@@ -429,6 +428,21 @@ class Ui_MainWindow(object):
         self.statusbar = QtWidgets.QStatusBar(MainWindow)
         self.statusbar.setObjectName("statusbar")
         MainWindow.setStatusBar(self.statusbar)
+
+        for attr in vars(self):
+            if 'spinBox' in attr:
+                getattr(self, attr).setMaximum(1000)
+        self.spinBox_length_ab.setValue(50)
+        self.spinBox_length_bc.setValue(50)
+        self.spinBox_length_cd.setValue(10)
+        self.spinBox_length_de.setValue(20)
+        self.spinBox_length_ef.setValue(150)
+        self.spinBox_length_fg.setValue(20)
+        self.spinBox_length_gh.setValue(55)
+        self.spinBox_length_hi.setValue(55)
+        self.spinBox_length_ia.setValue(20)
+
+
 
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
@@ -467,7 +481,6 @@ class Ui_MainWindow(object):
         self.label_perspective_xx.setText(_translate("MainWindow", "Xx"))
         self.pushButton_apply_perspective.setText(_translate("MainWindow", "Apply"))
         self.groupBox_2.setTitle(_translate("MainWindow", "Length"))
-        self.label_length_jk.setText(_translate("MainWindow", "JK"))
         self.label_length_fg.setText(_translate("MainWindow", "FG"))
         self.label_length_cd.setText(_translate("MainWindow", "CD"))
         self.label_length_bc.setText(_translate("MainWindow", "BC"))
@@ -475,7 +488,7 @@ class Ui_MainWindow(object):
         self.label_length_gh.setText(_translate("MainWindow", "GH"))
         self.label_length_hi.setText(_translate("MainWindow", "HI"))
         self.label_length_ef.setText(_translate("MainWindow", "EF"))
-        self.label_length_ij.setText(_translate("MainWindow", "IJ"))
+        self.label_length_ia.setText(_translate("MainWindow", "IA"))
         self.label_length_ab.setText(_translate("MainWindow", "AB"))
 
 
