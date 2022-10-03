@@ -1,6 +1,7 @@
 import sys
+import string
 import numpy as np
-from typing import Dict
+from typing import Dict, List
 
 from PyQt5.QtWidgets import QMainWindow, QApplication, QShortcut
 from PyQt5.QtWidgets import QGraphicsScene, QGraphicsView, QGraphicsRectItem, QApplication, QGraphicsLineItem
@@ -12,7 +13,15 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from config import axis_arr, ax_len, identity_matrix
 from ui import Ui_MainWindow
 
-POINTS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I']
+# TODO:
+# 1. Add spinbox for grid num
+# 2. Create affine matrix calculation
+# 3. Create affine matrix calculation
+# 4. Convert points to matrix
+# 5. Когда добавлю матрицу, то надо будет сделать так, чтобы она умножалась на точки
+
+
+POINTS = string.ascii_lowercase[:9]
 START_COORD = {'x': 2, 'y': 10}
 
 LINES_LENGTHS: Dict[str, float] = {
@@ -41,42 +50,142 @@ class MainWindow(QMainWindow):
 
         self.ui.pushButton_length_apply.clicked.connect(self.group_box_length_value_changed)
         self.ui.pushButton_set_default.clicked.connect(self.set_default_figure)
+        self.ui.pushButton_affine_apply.clicked.connect(self.apply_affine_transform)
+        self.ui.pushButton_perspective_apply.clicked.connect(self.apply_perspective_transform)
+        self.ui.pushButton_rotation_apply.clicked.connect(self.apply_rotation)
 
         self.ui.spinBox_size.valueChanged.connect(self.size_value_changed)
         self.scene = QGraphicsScene(-10, -10, 2000, 2000)
 
-        self.draw_coord_axis(matrix=identity_matrix)
-        self.draw_figure(**self.get_default_points())
+        # self.transform_matrix = identity_matrix
+        # self.points = self.get_default_points()
+        self.set_default_figure()
+
+        self.draw_coord_axis(matrix=self.transform_matrix)
+        self.draw_figure(**self.points)
         self.ui.graphicsView.setScene(self.scene)
 
         print()
 
     def size_value_changed(self):
-        self.points = self.get_current_points()
+        self.points = self.get_points_multiplied_on_matrix(self.transform_matrix, is_perspective=self.is_perpective)
         self.scene.clear()
-        self.draw_coord_axis(matrix=identity_matrix)
+        self.draw_coord_axis(matrix=self.transform_matrix)
         self.draw_figure(**self.points)
 
     def group_box_length_value_changed(self):
-        self.points = self.get_current_points()
+        self.points = self.get_points_multiplied_on_matrix(self.transform_matrix, is_perspective=self.is_perpective)
         self.scene.clear()
-        self.draw_coord_axis(matrix=identity_matrix)
+        self.draw_coord_axis(matrix=self.transform_matrix)
         self.draw_figure(**self.points)
+
+    def apply_affine_transform(self):
+        self.is_perpective = False
+        self.transform_matrix = self.get_affine_transform_matrix()
+        self.points = self.get_points_multiplied_on_matrix(self.transform_matrix, is_perspective=self.is_perpective)
+        self.scene.clear()
+        self.draw_coord_axis(matrix=self.transform_matrix)
+        self.draw_figure(**self.points)
+
+    def apply_perspective_transform(self):
+        self.is_perpective = True
+        self.transform_matrix = self.get_perspective_transform_matrix()
+        self.points = self.get_points_multiplied_on_matrix(self.transform_matrix, is_perspective=self.is_perpective)
+
+        self.scene.clear()
+        self.draw_coord_axis(matrix=self.transform_matrix)
+        self.draw_figure(**self.points)
+
+    def apply_rotation(self):
+        self.is_perpective = False
+        rotation_matrix = self.get_rotation_matrix()
+        self.points = self.get_points_multiplied_on_matrix(rotation_matrix, is_perspective=self.is_perpective)
+
+        self.scene.clear()
+        self.draw_coord_axis(matrix=self.transform_matrix)
+        self.draw_figure(**self.points)
+
 
     def set_default_figure(self):
         self.points = self.get_default_points()
+        self.is_perpective = False
 
-        for attr in vars(self):  # change values to default in spinboxes
+        for attr in vars(self.ui):  # change values to default in spinboxes
             if 'spinBox_length' in attr:
-                getattr(self, attr).setValue(int(attr.split('_')[-1].upper() * 10))
+                getattr(self.ui, attr).setValue(int(LINES_LENGTHS[attr.split('_')[-1].upper()] * 10))
 
+        self.transform_matrix = identity_matrix
         self.scene.clear()
-        self.draw_coord_axis(matrix=identity_matrix)
+        self.draw_coord_axis(matrix=self.transform_matrix)
         self.draw_figure(**self.points)
+
+    def get_affine_transform_matrix(self) -> np.ndarray:
+        xx = self.ui.spinBox_affine_xx.value()
+        xy = self.ui.spinBox_affine_xy.value()
+
+        yx = self.ui.spinBox_affine_yx.value()
+        yy = self.ui.spinBox_affine_yy.value()
+
+        ox = self.ui.spinBox_affine_0x.value()
+        oy = self.ui.spinBox_affine_0y.value()
+
+        return np.array(
+            [[xx, xy, 0],
+             [yx, yy, 0],
+             [ox, oy, 1]]
+        )
+
+    def get_perspective_transform_matrix(self) -> np.ndarray:
+        xx = self.ui.spinBox_perspective_xx.value()
+        xy = self.ui.spinBox_perspective_xy.value()
+        wx = self.ui.spinBox_perspective_wx.value()
+
+        yx = self.ui.spinBox_perspective_yx.value()
+        yy = self.ui.spinBox_perspective_yy.value()
+        wy = self.ui.spinBox_perspective_wy.value()
+
+        ox = self.ui.spinBox_perspective_0x.value()
+        oy = self.ui.spinBox_perspective_0y.value()
+        wo = self.ui.spinBox_perspective_w0.value()
+
+        return np.array(
+            [[xx * wx, xy * wx, wx],
+             [yx * wy, yy * wy, wy],
+             [ox * wo, oy * wo, wo]]
+        )
+
+    def get_rotation_matrix(self) -> np.ndarray:
+        x = self.ui.spinBox_rotation_x.value()
+        y = self.ui.spinBox_rotation_y.value()
+        angle = self.ui.spinBox_rotation_angle.value()
+        sin_a = np.sin(np.radians(angle))
+        cos_a = np.cos(np.radians(angle))
+
+        return np.array(
+            [[cos_a,    sin_a,   0],
+             [-sin_a,   cos_a,   0],
+             [-x*(cos_a-1) + (y*sin_a), -x*(sin_a-1)-y*(cos_a-1), 1]]
+        )
+
+
+
+    def get_points_multiplied_on_matrix(self, transform_matrix: np.ndarray, is_perspective: bool = False) -> Dict[str, QPointF]:
+        unit_size = self.ui.spinBox_size.value()
+        cur_points = self.get_current_points()
+        if is_perspective:
+            points_matrix: List[np.ndarray] = [np.array([point.x() / unit_size, point.y() / unit_size, 1]) for point in cur_points.values()]
+        else:
+            points_matrix: List[np.ndarray] = [np.array([point.x(), point.y(), 1]) for point in cur_points.values()]
+
+        points_transformed = [point.dot(transform_matrix) for point in points_matrix]
+        if is_perspective:
+            points_transformed = [(point / point[-1]) * unit_size for point in points_transformed]
+
+        return {f'point_{point_index}': QPointF(*point[:2]) for point, point_index in zip(points_transformed, POINTS)}
 
     def draw_coord_axis(self, matrix: np.ndarray):
         unit_size = self.ui.spinBox_size.value()
-        grid_num = 20
+        grid_num = 200  ###### ADD SPINBOX
 
         O = axis_arr[0] @ matrix
         X = axis_arr[1] @ matrix
@@ -204,5 +313,3 @@ if __name__ == '__main__':
     window = MainWindow()
     window.show()
     sys.exit(app.exec_())
-
-
