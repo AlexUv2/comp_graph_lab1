@@ -3,22 +3,14 @@ import string
 import numpy as np
 from typing import Dict, List
 
-from PyQt5.QtWidgets import QMainWindow, QApplication, QShortcut
-from PyQt5.QtWidgets import QGraphicsScene, QGraphicsView, QGraphicsRectItem, QApplication, QGraphicsLineItem
+from PyQt5.QtWidgets import QMainWindow, QShortcut
+from PyQt5.QtWidgets import QGraphicsScene, QApplication
 from PyQt5.QtGui import QBrush, QPen
 from PyQt5.QtGui import QKeySequence
 from PyQt5.QtCore import Qt, QPointF, QPoint, QLineF
-from PyQt5 import QtCore, QtGui, QtWidgets
 
-from config import axis_arr, ax_len, identity_matrix
+from config import axis_arr, identity_matrix
 from ui import Ui_MainWindow
-
-# TODO:
-# 1. Add spinbox for grid num
-# 2. Create affine matrix calculation
-# 3. Create affine matrix calculation
-# 4. Convert points to matrix
-# 5. Когда добавлю матрицу, то надо будет сделать так, чтобы она умножалась на точки
 
 
 POINTS = string.ascii_lowercase[:9]
@@ -57,52 +49,76 @@ class MainWindow(QMainWindow):
         self.ui.spinBox_size.valueChanged.connect(self.size_value_changed)
         self.scene = QGraphicsScene(-10, -10, 2000, 2000)
 
-        # self.transform_matrix = identity_matrix
-        # self.points = self.get_default_points()
-        self.set_default_figure()
 
-        self.draw_coord_axis(matrix=self.transform_matrix)
-        self.draw_figure(**self.points)
+        self.set_default_figure()
+        self.points_transform_matrics = identity_matrix
+
         self.ui.graphicsView.setScene(self.scene)
 
         print()
 
     def size_value_changed(self):
-        self.points = self.get_points_multiplied_on_matrix(self.transform_matrix, is_perspective=self.is_perpective)
+        self.points = self.get_points_multiplied_on_matrix(self.points_transform_matrics, is_perspective=self.is_perpective)
         self.scene.clear()
-        self.draw_coord_axis(matrix=self.transform_matrix)
+        self.draw_coord_axis(matrix=self.axis_transform_matrix)
         self.draw_figure(**self.points)
 
     def group_box_length_value_changed(self):
-        self.points = self.get_points_multiplied_on_matrix(self.transform_matrix, is_perspective=self.is_perpective)
+        self.points = self.get_points_multiplied_on_matrix(self.points_transform_matrics, is_perspective=self.is_perpective)
         self.scene.clear()
-        self.draw_coord_axis(matrix=self.transform_matrix)
+        self.draw_coord_axis(matrix=self.axis_transform_matrix)
         self.draw_figure(**self.points)
 
     def apply_affine_transform(self):
         self.is_perpective = False
-        self.transform_matrix = self.get_affine_transform_matrix()
-        self.points = self.get_points_multiplied_on_matrix(self.transform_matrix, is_perspective=self.is_perpective)
+        self.points_transform_matrics = identity_matrix
+
+        self.axis_transform_matrix = self.get_affine_transform_matrix()
+        self.points_transform_matrics = self.get_affine_transform_matrix()
+        self.points = self.get_points_multiplied_on_matrix(self.points_transform_matrics, is_perspective=self.is_perpective)
         self.scene.clear()
-        self.draw_coord_axis(matrix=self.transform_matrix)
+        self.draw_coord_axis(matrix=self.axis_transform_matrix)
         self.draw_figure(**self.points)
 
     def apply_perspective_transform(self):
         self.is_perpective = True
-        self.transform_matrix = self.get_perspective_transform_matrix()
-        self.points = self.get_points_multiplied_on_matrix(self.transform_matrix, is_perspective=self.is_perpective)
+        self.points_transform_matrics = identity_matrix
 
+        self.axis_transform_matrix = self.get_perspective_transform_matrix()
+        self.points_transform_matrics = self.get_perspective_transform_matrix()
+        self.points = self.get_points_multiplied_on_matrix(self.points_transform_matrics, is_perspective=self.is_perpective)
         self.scene.clear()
-        self.draw_coord_axis(matrix=self.transform_matrix)
+        self.draw_coord_axis(matrix=self.axis_transform_matrix)
         self.draw_figure(**self.points)
 
     def apply_rotation(self):
-        self.is_perpective = False
-        rotation_matrix = self.get_rotation_matrix()
-        self.points = self.get_points_multiplied_on_matrix(rotation_matrix, is_perspective=self.is_perpective)
+        unit_size = self.ui.spinBox_size.value()
+
+        # self.is_perpective = False
+        self.points_transform_matrics = self.get_rotation_matrix()
+        self.points_transform_matrics = self.get_rotation_matrix()
+        self.points = self.get_points_multiplied_on_matrix(
+            self.points_transform_matrics,
+            is_perspective=self.is_perpective,
+            is_rotation=True
+        )
 
         self.scene.clear()
-        self.draw_coord_axis(matrix=self.transform_matrix)
+        x = self.ui.spinBox_rotation_x.value()  # * unit_size
+        y = self.ui.spinBox_rotation_y.value()  # * unit_size
+
+        # draw blue point on rotation point
+        x, y, mult = np.array([x, y, 1]) @ self.axis_transform_matrix
+        if self.is_perpective:
+            x /= mult
+            y /= mult
+
+        x *= unit_size
+        y *= unit_size
+        self.scene.addEllipse(x - 2, y - 2, 4, 4, QPen(Qt.blue), QBrush(Qt.blue))
+
+
+        self.draw_coord_axis(matrix=self.axis_transform_matrix)
         self.draw_figure(**self.points)
 
 
@@ -114,9 +130,10 @@ class MainWindow(QMainWindow):
             if 'spinBox_length' in attr:
                 getattr(self.ui, attr).setValue(int(LINES_LENGTHS[attr.split('_')[-1].upper()] * 10))
 
-        self.transform_matrix = identity_matrix
+        self.axis_transform_matrix = identity_matrix
+        self.points_transform_matrics = identity_matrix
         self.scene.clear()
-        self.draw_coord_axis(matrix=self.transform_matrix)
+        self.draw_coord_axis(matrix=self.axis_transform_matrix)
         self.draw_figure(**self.points)
 
     def get_affine_transform_matrix(self) -> np.ndarray:
@@ -155,8 +172,19 @@ class MainWindow(QMainWindow):
         )
 
     def get_rotation_matrix(self) -> np.ndarray:
-        x = self.ui.spinBox_rotation_x.value()
-        y = self.ui.spinBox_rotation_y.value()
+        unit_size = self.ui.spinBox_size.value()
+
+        x = self.ui.spinBox_rotation_x.value() #* unit_size
+        y = self.ui.spinBox_rotation_y.value() #* unit_size
+        x, y, mult = np.array([x, y, 1]) @ self.axis_transform_matrix
+
+        if self.is_perpective:
+            x /= mult
+            y /= mult
+        else:
+            x *= unit_size
+            y *= unit_size
+
         angle = self.ui.spinBox_rotation_angle.value()
         sin_a = np.sin(np.radians(angle))
         cos_a = np.cos(np.radians(angle))
@@ -164,20 +192,28 @@ class MainWindow(QMainWindow):
         return np.array(
             [[cos_a,    sin_a,   0],
              [-sin_a,   cos_a,   0],
-             [-x*(cos_a-1) + (y*sin_a), -x*(sin_a-1)-y*(cos_a-1), 1]]
+             [-x*(cos_a-1) + (y*sin_a), -x*sin_a-y*(cos_a-1), 1]]
         )
 
-
-
-    def get_points_multiplied_on_matrix(self, transform_matrix: np.ndarray, is_perspective: bool = False) -> Dict[str, QPointF]:
+    def get_points_multiplied_on_matrix(
+            self,
+            transform_matrix: np.ndarray,
+            is_perspective: bool = False,
+            is_rotation: bool = False
+    ) -> Dict[str, QPointF]:
         unit_size = self.ui.spinBox_size.value()
         cur_points = self.get_current_points()
+
+        if is_rotation:
+            cur_points = self.points
+
         if is_perspective:
             points_matrix: List[np.ndarray] = [np.array([point.x() / unit_size, point.y() / unit_size, 1]) for point in cur_points.values()]
         else:
             points_matrix: List[np.ndarray] = [np.array([point.x(), point.y(), 1]) for point in cur_points.values()]
 
-        points_transformed = [point.dot(transform_matrix) for point in points_matrix]
+        points_transformed = [point @ transform_matrix for point in points_matrix]
+
         if is_perspective:
             points_transformed = [(point / point[-1]) * unit_size for point in points_transformed]
 

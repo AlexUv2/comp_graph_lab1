@@ -9,3 +9,10 @@ axis_arr = np.array(
 )
 
 identity_matrix = np.identity(3, dtype=np.int32)
+# identity_matrix = np.array(
+#     [[2, 2, 0],
+#      [0, 3, 0],
+#      [0, 0, 1]]
+# )
+
+print()
