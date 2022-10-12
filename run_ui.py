@@ -57,6 +57,12 @@ class MainWindow(QMainWindow):
 
         print()
 
+    def move_value_changed(self):
+        self.points = self.get_points_multiplied_on_matrix(self.points_transform_matrics, is_perspective=self.is_perpective)
+        self.scene.clear()
+        self.draw_coord_axis(matrix=self.axis_transform_matrix)
+        self.draw_figure(**self.points)
+
     def size_value_changed(self):
         self.points = self.get_points_multiplied_on_matrix(self.points_transform_matrics, is_perspective=self.is_perpective)
         self.scene.clear()

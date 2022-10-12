@@ -49,7 +49,7 @@ class Ui_MainWindow(object):
         self.label_radius_o.setAlignment(QtCore.Qt.AlignCenter)
         self.label_radius_o.setObjectName("label_radius_o")
         self.horizontalLayout_13.addWidget(self.label_radius_o)
-        self.spinBox_radius_o = QtWidgets.QSpinBox(self.groupBox_3)
+        self.spinBox_radius_o = QtWidgets.QDoubleSpinBox(self.groupBox_3)
         self.spinBox_radius_o.setSuffix("")
         self.spinBox_radius_o.setPrefix("")
         self.spinBox_radius_o.setObjectName("spinBox_radius_o")
@@ -419,6 +419,26 @@ class Ui_MainWindow(object):
         self.horizontalLayout.addWidget(self.spinBox_length_ab)
         self.gridLayout.addLayout(self.horizontalLayout, 0, 0, 1, 1)
 
+        self.group_box_100 = QtWidgets.QGroupBox(self.centralwidget)
+        self.group_box_100.setGeometry(QtCore.QRect(1200, 25, 200, 100))
+        self.group_box_100.setTitle("Move")
+        self.spinBox_move_x = QtWidgets.QSpinBox(self.group_box_100)
+        self.spinBox_move_y = QtWidgets.QSpinBox(self.group_box_100)
+        self.label_move_x = QtWidgets.QLabel(self.group_box_100)
+        self.label_move_y = QtWidgets.QLabel(self.group_box_100)
+        self.label_move_y.setText("Y")
+        self.label_move_x.setText("X")
+        self.spinBox_move_x.setValue(2)
+        self.spinBox_move_y.setValue(10)
+
+        # move spinBox_move_x, spinBox_move_y horizontally
+        self.horizontalLayout_11 = QtWidgets.QHBoxLayout(self.group_box_100)
+        self.horizontalLayout_11.setObjectName("horizontalLayout_11")
+        self.horizontalLayout_11.addWidget(self.label_move_x)
+        self.horizontalLayout_11.addWidget(self.spinBox_move_x)
+        self.horizontalLayout_11.addWidget(self.label_move_y)
+        self.horizontalLayout_11.addWidget(self.spinBox_move_y)
+
         self.gridLayout_10.addWidget(self.groupBox_2, 2, 0, 1, 2)
         self.gridLayout_11.addLayout(self.gridLayout_10, 0, 0, 1, 1)
         self.scrollArea.setWidget(self.scrollAreaWidgetContents_2)
@@ -434,15 +454,16 @@ class Ui_MainWindow(object):
         for attr in vars(self):
             if 'spinBox' in attr:
                 getattr(self, attr).setMaximum(1000)
-        self.spinBox_length_ab.setValue(50)
-        self.spinBox_length_bc.setValue(50)
-        self.spinBox_length_cd.setValue(10)
-        self.spinBox_length_de.setValue(20)
-        self.spinBox_length_ef.setValue(150)
-        self.spinBox_length_fg.setValue(20)
-        self.spinBox_length_gh.setValue(55)
-        self.spinBox_length_hi.setValue(55)
-        self.spinBox_length_ia.setValue(20)
+        self.spinBox_length_ab.setValue(5)
+        self.spinBox_length_bc.setValue(5)
+        self.spinBox_length_cd.setValue(1)
+        self.spinBox_length_de.setValue(2)
+        self.spinBox_length_ef.setValue(15)
+        self.spinBox_length_fg.setValue(2)
+        self.spinBox_length_gh.setValue(5)
+        self.spinBox_length_hi.setValue(5)
+        self.spinBox_length_ia.setValue(2)
+        self.spinBox_radius_o.setValue(1.4)
 
 
 
